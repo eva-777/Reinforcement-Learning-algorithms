@@ -38,7 +38,7 @@ matplotlib == 3.10.3
 ## References
 
 - [PPO paper](https://arxiv.org/abs/1707.06347)
-- [Github repository 1](https://github.com/nikhilbarhate99/PPO-PyTorch) 
-- [Github repository 2](https://github.com/philtabor/Youtube-Code-Repository/tree/master/ReinforcementLearning/PolicyGradient/PPO/torch)
+- [Github repository from nikhilbarhate99](https://github.com/nikhilbarhate99/PPO-PyTorch) 
+- [Github repository philtabor](https://github.com/philtabor/Youtube-Code-Repository/tree/master/ReinforcementLearning/PolicyGradient/PPO/torch)
 
 
