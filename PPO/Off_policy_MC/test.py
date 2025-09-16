@@ -74,7 +74,7 @@ def test():
     random_seed = 0             #### set this to load a particular checkpoint trained on random seed
     run_num = 0      #### set this to load a particular checkpoint num
 
-    directory = "./PPO-PyTorch-master/PPO_preTrained" + '/' + env_name + '/'
+    directory = "./Off_policy_MC/PPO_preTrained" + '/' + env_name + '/'
     checkpoint_path = directory + "PPO_{}_{}_{}.pth".format(env_name, random_seed, run_num)
     print("loading network from : " + checkpoint_path)
 
@@ -89,7 +89,7 @@ def test():
         state, _ = env.reset()
 
         for t in range(1, max_ep_len+1):
-            action = ppo_agent.select_action(state)
+            action = ppo_agent.take_action(state)
             state, reward, done, _, _ = env.step(action)
             ep_reward += reward
 

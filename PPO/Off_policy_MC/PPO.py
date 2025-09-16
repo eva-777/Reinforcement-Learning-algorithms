@@ -51,7 +51,7 @@ class ActorCritic(nn.Module):
         
         if has_continuous_action_space:
             self.action_dim = action_dim
-            self.action_var = torch.full((action_dim,), action_std_init * action_std_init).to(device)
+            self.action_var = torch.full((action_dim,), action_std_init * action_std_init).to(device)  # covariance matrix
         # actor
         if has_continuous_action_space :
             self.actor = nn.Sequential(
@@ -123,6 +123,7 @@ class ActorCritic(nn.Module):
             dist = Categorical(action_probs)
         action_logprobs = dist.log_prob(action)
         dist_entropy = dist.entropy()
+        
         state_values = self.critic(state)
         
         return action_logprobs, state_values, dist_entropy
@@ -179,7 +180,7 @@ class PPO:
             print("WARNING : Calling PPO::decay_action_std() on discrete action space policy")
         print("--------------------------------------------------------------------------------------------")
 
-    def select_action(self, state):
+    def take_action(self, state):
 
         if self.has_continuous_action_space:
             with torch.no_grad():

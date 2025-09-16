@@ -58,8 +58,8 @@ def test():
     agent = Agent(is_continuous, state_dim, action_dim, GAMMA, LAMBDA, EPS_CLIP, LR_ACTOR, LR_CRITIC, K_EPOCHS, BATCH_SIZE)
 
     # preTrained weights file path
-    run_num = 1
-    checkpoint_path = f"./PPO_v2/ppo_save/Pendulum-v1/actor_Pendulum-v1_{run_num}.pth"
+    run_num = 0
+    checkpoint_path = f"./Off_policy_GAE/save/Pendulum-v1/actor_Pendulum-v1_{run_num}.pth"
     print("loading network from: " + checkpoint_path)
 
     agent.load_model(checkpoint_path)
@@ -73,7 +73,7 @@ def test():
         state, _ = env.reset()
 
         for t in range(1, EPI_LEN+1):
-            action, _, _ = agent.select_action(state)
+            action, _, _ = agent.take_action(state)
             state, reward, done, _, _ = env.step(action)
             ep_reward += reward
 

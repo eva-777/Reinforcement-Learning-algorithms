@@ -94,7 +94,7 @@ def save_gif_images(env_name, has_continuous_action_space, max_ep_len, action_st
 		state = env.reset()
 
 		for t in range(1, max_ep_len+1):
-		    action = ppo_agent.select_action(state)
+		    action = ppo_agent.take_action(state)
 		    state, reward, done, _ = env.step(action)
 		    ep_reward += reward
 

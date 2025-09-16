@@ -58,7 +58,7 @@ def test():
     # preTrained weights file path
     run_num = 0
 
-    checkpoint_path = f"./On_policy_GAE/ppo_save/{env_name}/actor_{env_name}_{run_num}.pth"
+    checkpoint_path = f"./On_policy_GAE/save/{env_name}/actor_{env_name}_{run_num}.pth"
     print("loading network from: " + checkpoint_path)
 
     agent.load_model(checkpoint_path)
@@ -72,7 +72,7 @@ def test():
         state, _ = env.reset()
 
         for t in range(1, EPI_LEN+1):
-            action, _, _ = agent.select_action(state)
+            action, _, _ = agent.take_action(state)
             state, reward, done, _, _ = env.step(action)
             ep_reward += reward
 

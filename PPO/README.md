@@ -22,7 +22,7 @@
 ## Package version
 
 ```
-python == 3.11.11  
+python == 3.11.13  
 pyTorch == 2.3.1+cu121  
 torchvision == 0.18.1+cu121  
 gym == 0.26.2  
@@ -38,7 +38,8 @@ matplotlib == 3.10.3
 ## References
 
 - [PPO paper](https://arxiv.org/abs/1707.06347)
-- [Github repository from nikhilbarhate99](https://github.com/nikhilbarhate99/PPO-PyTorch) 
-- [Github repository philtabor](https://github.com/philtabor/Youtube-Code-Repository/tree/master/ReinforcementLearning/PolicyGradient/PPO/torch)
+- [Github from nikhilbarhate99](https://github.com/nikhilbarhate99/PPO-PyTorch) 
+- [Github from philtabor](https://github.com/philtabor/Youtube-Code-Repository/tree/master/ReinforcementLearning/PolicyGradient/PPO/torch)
+- https://github.com/XinJingHao/PPO-Continuous-Pytorch/blob/main/utils.py
 
 

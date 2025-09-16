@@ -150,8 +150,8 @@ def train():
     print("============================================================================================")
 
     # logging file
-    log_f = open(log_f_name,"w+")
-    log_f.write('episode,timestep,reward\n')
+    log_f = open(log_f_name, "w+")
+    log_f.write('episode, timestep, reward\n')
 
     # printing and logging variables
     print_running_reward = 0
@@ -174,7 +174,7 @@ def train():
         for t in range(1, max_ep_len+1):
 
             # select action with policy
-            action = ppo_agent.select_action(state)
+            action = ppo_agent.take_action(state)
             state, reward, done, truncation, _ = env.step(action)
 
             # saving reward and is_terminals
@@ -199,7 +199,7 @@ def train():
                 log_avg_reward = log_running_reward / log_running_episodes
                 log_avg_reward = round(log_avg_reward, 4)
 
-                log_f.write('{},{},{}\n'.format(i_episode, time_step, log_avg_reward))
+                log_f.write('{}, {}, {}\n'.format(i_episode, time_step, log_avg_reward))
                 log_f.flush()
 
                 log_running_reward = 0
