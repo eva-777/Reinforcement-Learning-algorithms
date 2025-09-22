@@ -8,57 +8,49 @@ import numpy as np
 
 import gym
 # import roboschool
-from PPO import Agent
+from ppo import Agent
 
 
 #################################### Testing ###################################
-def test():
+def test(env_name, run_num):
     print("============================================================================================")
 
+    if env_name in ["CartPole-v1", "LunarLander-v2"]:
+        is_continuous = False
+    elif env_name in ["Pendulum-v1", "BipedalWalker-v3"]:
+        is_continuous = True
+
     ################## hyperparameters ##################
-
-    # env_name = "CartPole-v1"
-    # is_continuous = False
-
-    env_name = "Pendulum-v1"
-    is_continuous = True
 
     TOTAL_EP = 10     # total num of testing episodes
     EPI_LEN = 300            # max timesteps in one episode
 
     render = True               # render environment on screen
-    frame_delay = 0.01             # if required; add delay b/w frames
+    frame_delay = 0.001             # if required; add delay b/w frames
 
     K_EPOCHS = 60
     BATCH_SIZE = 300
-
     GAMMA = 0.99
     LAMBDA = 0.95
     EPS_CLIP = 0.2
-
     LR_ACTOR = 3e-4
     LR_CRITIC = 1e-3
+    use_orthogonal = False
 
     #####################################################
 
     env = gym.make(env_name, render_mode='human')
-
-    # state space dimension
     state_dim = env.observation_space.shape[0]
-
-    # action space dimension
     if is_continuous:
         action_dim = env.action_space.shape[0]
     else:
         action_dim = env.action_space.n
 
-    # initialize a PPO agent
-    agent = Agent(is_continuous, state_dim, action_dim, GAMMA, LAMBDA, EPS_CLIP, LR_ACTOR, LR_CRITIC, K_EPOCHS, BATCH_SIZE)
+    # Initialize agent
+    agent = Agent(use_orthogonal, is_continuous, state_dim, action_dim, GAMMA, LAMBDA, EPS_CLIP, LR_ACTOR, LR_CRITIC, K_EPOCHS, BATCH_SIZE)
 
-    # preTrained weights file path
-    run_num = 0
-
-    checkpoint_path = f"./On_policy_GAE/save/{env_name}/actor_{env_name}_{run_num}.pth"
+    # PreTrained weights file path
+    checkpoint_path = f"./On_policy_GAE/result_{env_name}/save/actor_{run_num}.pth"
     print("loading network from: " + checkpoint_path)
 
     agent.load_model(checkpoint_path)
@@ -68,13 +60,13 @@ def test():
     test_running_reward = 0
 
     for ep in range(1, TOTAL_EP+1):
-        ep_reward = 0
+        ep_return = 0
         state, _ = env.reset()
 
         for t in range(1, EPI_LEN+1):
             action, _, _ = agent.take_action(state)
             state, reward, done, _, _ = env.step(action)
-            ep_reward += reward
+            ep_return += reward
 
             if render:
                 env.render()
@@ -83,9 +75,9 @@ def test():
             if done:
                 break
 
-        test_running_reward +=  ep_reward
-        print('Episode: {} \t\t Reward: {}'.format(ep, round(ep_reward, 2)))
-        ep_reward = 0
+        test_running_reward +=  ep_return
+        print('Episode: {} \t\t Return: {}'.format(ep, round(ep_return, 2)))
+        ep_return = 0
 
     env.close()
 
@@ -100,4 +92,15 @@ def test():
 
 if __name__ == '__main__':
 
-    test()
+
+    # env_name = "CartPole-v1"
+
+    env_name = "LunarLander-v2"
+
+    # env_name = "Pendulum-v1"
+
+    # env_name = "BipedalWalker-v3"
+    
+    run_num = 3
+
+    test(env_name, run_num)

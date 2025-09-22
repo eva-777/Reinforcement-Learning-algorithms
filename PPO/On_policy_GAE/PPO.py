@@ -1,8 +1,6 @@
 """
-- An on-policy version of Proximal Policy Optimization (PPO) algorithm,
-computing advantages by GAE (Generalized Advantage Estimation).
+- An on-policy version of Proximal Policy Optimization (PPO) algorithm, computing advantages by GAE (Generalized Advantage Estimation).
 - Implemented using Pytorch, and OpenAI Gym environment.
-- Referred to 'https://github.com/philtabor/Youtube-Code-Repository/tree/master/ReinforcementLearning/PolicyGradient/PPO/torch'
 """
 
 import numpy as np
@@ -18,45 +16,45 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Device set to : " + str(torch.cuda.get_device_name(device)))
 print("============================================================================================")
 
-
 #################### Experience replay ####################
 class ReplayBuffer:
     """
-        Description: 经验回放缓冲区, 用于存储agent的经验
+        Description: store agent's memory
         Args:
-            batch_size: 每次采样的批次大小
+            - batch_size: size of memory for each gradient descent
     """
     def __init__(self, batch_size):
-        
+        self.batch_size = batch_size
+
         self.state_list = []
         self.action_list = []
         self.logprob_list = []
         self.reward_list = []
         self.value_list = []
-        self.done_list = []
-
-        self.batch_size = batch_size
+        self.terminate_list = []
+        self.truncate_list = []
 
     def generate_batches(self):
         """
-            Description: 依据"随机洗牌"从buffer中随机采样多批次经验
-            Return -> batch idx
+            Description: randomly sample multiple batches through 'random shuffle'
+            Return -> batch index
         """
         n_states = len(self.state_list)
         batch_start = np.arange(0, n_states, self.batch_size)
-        index = np.arange(n_states, dtype=np.int64)
-        np.random.shuffle(index)
-        batches = [index[i:i+self.batch_size] for i in batch_start]
+        batch_index = np.arange(n_states, dtype=np.int64)
+        np.random.shuffle(batch_index)
+        batches = [batch_index[i:i+self.batch_size] for i in batch_start]
 
         return  batches
 
-    def add_memory(self, state, action, logprob, reward, value, done):
+    def add_memory(self, state, action, logprob, reward, value, terminated, truncated):
         self.state_list.append(state)
         self.action_list.append(action)
         self.logprob_list.append(logprob)
         self.reward_list.append(reward)
         self.value_list.append(value)
-        self.done_list.append(done)
+        self.terminate_list.append(terminated)
+        self.truncate_list.append(truncated)
 
     def clear_memory(self):
         self.state_list.clear()
@@ -64,39 +62,67 @@ class ReplayBuffer:
         self.logprob_list.clear()
         self.reward_list.clear()
         self.value_list.clear()
-        self.done_list.clear()
+        self.terminate_list.clear()
+        self.truncate_list.clear()
     
-
 ########################## Actor ##########################
+
+# Trick 8: orthogonal initialization
+def orthogonal_init(layer, std=5/3, bias_const=0.0):
+    """
+        Args: 'std' is to adjust the absolute value of the weight matrix. 
+        When act_fuc is ReLU -> sqrt(2), Tanh -> 5/3, Linear -> 1
+    """
+    torch.nn.init.orthogonal_(layer.weight, gain=std)
+    torch.nn.init.constant_(layer.bias, bias_const)
+    return layer
+
 class Actor(nn.Module):
-    def __init__(self, is_continuous, state_dim, action_dim, hidden_dim=64):
-        super(Actor, self).__init__()
-
-        self.is_continuous = is_continuous
-        self.logstd_max = 1  # todo 随着训练，logstd上限逐渐衰减
-        self.logstd_min = -5.0 
-
-        if is_continuous:
-            self.feature_net = nn.Sequential(
-                nn.Linear(state_dim, hidden_dim),
-                nn.Tanh(),
-                nn.Linear(hidden_dim, hidden_dim),
-                nn.Tanh()
-            )
-            self.mean_head = nn.Linear(hidden_dim, action_dim)
-            self.std_head = nn.Linear(hidden_dim, action_dim)
+    def __init__(self, use_orthogonal, is_continuous, state_dim, action_dim, hidden_dim=64):
+        super().__init__()
         
+        self.is_continuous = is_continuous
+        self.logstd_max = 1  # todo the upper limit should gradually decay, with training
+        self.logstd_min = -5.0 
+        
+        if use_orthogonal:
+            if is_continuous:
+                self.feature_net = nn.Sequential(
+                    orthogonal_init(nn.Linear(state_dim, hidden_dim)),
+                    nn.Tanh(),
+                    orthogonal_init(nn.Linear(hidden_dim, hidden_dim)),
+                    nn.Tanh()
+                )
+                self.mean_head = orthogonal_init(nn.Linear(hidden_dim, action_dim), 0.01)
+                self.std_head = orthogonal_init(nn.Linear(hidden_dim, action_dim), 0.01)
+            else:
+                self.actor = nn.Sequential(
+                    orthogonal_init(nn.Linear(state_dim, hidden_dim)),
+                    nn.Tanh(),
+                    orthogonal_init(nn.Linear(hidden_dim, hidden_dim)),
+                    nn.Tanh(),
+                    orthogonal_init(nn.Linear(hidden_dim, action_dim)),
+                    nn.Softmax(dim=-1)
+                )
         else:
-            self.actor = nn.Sequential(
-                nn.Linear(state_dim, hidden_dim),
-                nn.Tanh(),
-                nn.Linear(hidden_dim, hidden_dim),
-                nn.Tanh(),
-                nn.Linear(hidden_dim, action_dim),
-                nn.Softmax(dim=-1)
-            )
-
-        self.to(device)
+            if is_continuous:
+                self.feature_net = nn.Sequential(
+                    nn.Linear(state_dim, hidden_dim),
+                    nn.Tanh(),
+                    nn.Linear(hidden_dim, hidden_dim),
+                    nn.Tanh()
+                )
+                self.mean_head = nn.Linear(hidden_dim, action_dim)
+                self.std_head = nn.Linear(hidden_dim, action_dim)
+            else:
+                self.actor = nn.Sequential(
+                    nn.Linear(state_dim, hidden_dim),
+                    nn.Tanh(),
+                    nn.Linear(hidden_dim, hidden_dim),
+                    nn.Tanh(),
+                    nn.Linear(hidden_dim, action_dim),
+                    nn.Softmax(dim=-1)
+                )
 
     def forward(self, state):
         if self.is_continuous:
@@ -104,16 +130,16 @@ class Actor(nn.Module):
             mean = torch.tanh(self.mean_head(features)) * 2  # atten: 针对Pendulum, [-2, 2]的动作范围
             log_std = torch.clamp(self.std_head(features), min=self.logstd_min, max=self.logstd_max)
             std = torch.exp(log_std)
-            dist = Normal(mean, std)   # todo 多维
+            dist = Normal(mean, std)  # todo joint-action probability under multi-dimension action space
         else:
             probs = self.actor(state)
             dist = Categorical(probs)
         
         return dist
-    
+
     def act(self, state):
         """
-            Description: 用于经验收集过程, 从分布中随机采样动作, 不考虑梯度传播
+            Description: sample action from dist during interaction process, without considering gradient
         """  
         dist = self.forward(state)
         action = dist.sample()
@@ -123,29 +149,36 @@ class Actor(nn.Module):
 
     def get_prob(self, state, action):
         """
-            Description: 用于策略更新过程, 计算动作的概率密度和熵
+            Description: compute log_prob and entropy of action, during update process, with considering gradient
         """  
         dist = self.forward(state)
         logprob = dist.log_prob(action)
         dist_entropy = dist.entropy()
 
-        return logprob.flatten(), dist_entropy.flatten()
+        return logprob.flatten(), dist_entropy.flatten() 
 
 
 ######################### Critic #########################
 class Critic(nn.Module):
-    def __init__(self, state_dim, hidden_dim=64):
-        super(Critic, self).__init__()
-
-        self.critic = nn.Sequential(
-            nn.Linear(state_dim, hidden_dim),
-            nn.Tanh(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.Tanh(),
-            nn.Linear(hidden_dim, 1)
-        )
-
-        self.to(device)
+    def __init__(self, use_orthogonal, state_dim, hidden_dim=64):
+        super().__init__()
+        
+        if use_orthogonal:
+            self.critic = nn.Sequential(
+                orthogonal_init(nn.Linear(state_dim, hidden_dim)),
+                nn.Tanh(),
+                orthogonal_init(nn.Linear(hidden_dim, hidden_dim)),
+                nn.Tanh(),
+                orthogonal_init(nn.Linear(hidden_dim, 1))
+            )
+        else:
+            self.critic = nn.Sequential(
+                nn.Linear(state_dim, hidden_dim),
+                nn.Tanh(),
+                nn.Linear(hidden_dim, hidden_dim),
+                nn.Tanh(),
+                nn.Linear(hidden_dim, 1)
+            )
 
     def forward(self, state):
         value = self.critic(state)
@@ -155,7 +188,7 @@ class Critic(nn.Module):
 
 ######################### PPO agent #########################
 class Agent:
-    def __init__(self, is_continuous, state_dim, action_dim, GAMMA, LAMBDA, EPS_CLIP, LR_ACTOR, LR_CRITIC, K_EPOCH, BATCH_SIZE):
+    def __init__(self, use_orthogonal, is_continuous, state_dim, action_dim, GAMMA, LAMBDA, EPS_CLIP, LR_ACTOR, LR_CRITIC, K_EPOCH, BATCH_SIZE):
         
         self.is_continuous = is_continuous
         
@@ -164,11 +197,11 @@ class Agent:
         self.EPS_CLIP = EPS_CLIP
         self.K_EPOCH = K_EPOCH
 
-        # on-policy
-        self.actor = Actor(is_continuous, state_dim, action_dim)
-        self.critic = Critic(state_dim)
-
-        # separate optimizer for actor and critic
+        # On-policy 
+        self.actor = Actor(use_orthogonal, is_continuous, state_dim, action_dim).to(device)  # True -> orthogonal
+        self.critic = Critic(use_orthogonal, state_dim).to(device)
+ 
+        # Separate optimizer for actor and critic
         self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=LR_ACTOR)
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=LR_CRITIC)
         
@@ -176,7 +209,7 @@ class Agent:
 
     def take_action(self, state):
         """
-            Description: 用于经验收集过程, 旧网络从分布中随机采样动作, 并评估状态价值
+            Description: sample action during interaction process and evaluate state-value, without considering gradient
         """
         with torch.no_grad():
             state = torch.FloatTensor(state).to(device)
@@ -185,86 +218,81 @@ class Agent:
 
         if self.is_continuous:
             return action.cpu().numpy().flatten(), prob.item(), value.item()  # atten 多维离散动作空间的action可能需要flatten()
-            
         else:
             return action.item(), prob.item(), value.item()
 
     def update_policy(self, last_state):
-        """
-            Description: 更新actor和critic网络的策略
-        """
-        # ----------------------- 提取buffer ----------------------- #
-        rewards_arr = np.array(self.replay_buffer.reward_list)
-        dones_arr = np.array(self.replay_buffer.done_list)
-        values_arr = np.array(self.replay_buffer.value_list)
 
-        # 添加最后一个状态价值
-        if dones_arr[-1]:
-            last_value = 0
-        else:
-            last_value = self.critic(torch.FloatTensor(last_state).to(device)).item()
-        next_values_arr = np.append(values_arr[1:], last_value)
+        # -------------------- Get memory from buffer -------------------- #
+        reward_arr = np.array(self.replay_buffer.reward_list)
+        terminated_arr = np.array(self.replay_buffer.terminate_list)
+        truncated_arr = np.array(self.replay_buffer.truncate_list)
+        value_arr = np.array(self.replay_buffer.value_list)
 
-        states = torch.FloatTensor(np.array(self.replay_buffer.state_list)).to(device)
-        actions = torch.FloatTensor(np.array(self.replay_buffer.action_list)).to(device)
-        old_probs = torch.FloatTensor(np.array(self.replay_buffer.logprob_list)).to(device)
-        old_values = torch.FloatTensor(values_arr).to(device)
+        # Compute last value
+        # NOTE: if terminate[-1]==True, last state makes no sense, then last value = 0
+        last_value = 0 if terminated_arr[-1] else self.critic(torch.FloatTensor(last_state).to(device)).item()
+        next_value_arr = np.append(value_arr[1:], last_value)
 
-        # ----------------------- 计算Advantages ----------------------- #
-        T = len(rewards_arr)
-        advantages = np.zeros(T, dtype=np.float32)
+        state = torch.FloatTensor(np.array(self.replay_buffer.state_list)).to(device)
+        action = torch.FloatTensor(np.array(self.replay_buffer.action_list)).to(device)
+        old_prob = torch.FloatTensor(np.array(self.replay_buffer.logprob_list)).to(device)
+        old_value = torch.FloatTensor(value_arr).to(device)
+
+        # ----------------------- Compute advantages ----------------------- #
+        T = len(reward_arr)
+        advantage = np.zeros(T, dtype=np.float32)
         gae = 0
 
         for t in reversed(range(T)):  # 反向计算
-            delta_t = rewards_arr[t] + self.GAMMA*next_values_arr[t]*(1-int(dones_arr[t])) - values_arr[t]
-            gae = delta_t + self.GAMMA*self.LAMBDA*gae*(1-int(dones_arr[t]))
-            advantages[t] = gae
+            # NOTE: MDP terminates or truncates, GAE should be re-accumulate
+            delta_t = reward_arr[t] + self.GAMMA*next_value_arr[t]*(1-int(terminated_arr[t])) - value_arr[t] 
+            done = int(terminated_arr[t] or truncated_arr[t])
+            gae = delta_t + self.GAMMA*self.LAMBDA*gae*(1-done)
+            advantage[t] = gae
 
-        advantages = torch.FloatTensor(advantages).to(device)
+        advantage = torch.FloatTensor(advantage).to(device)
+        # advantage = ((advantage - advantage.mean()) / (advantage.std() + 1e-5))
 
-        # old_returns -> value target
-        old_returns = advantages + old_values
+        value_target = advantage + old_value
 
-        # optimize policy for K epochs
+        # Optimize policy for K epochs
         for _ in range(self.K_EPOCH):
             batches = self.replay_buffer.generate_batches()
 
             for batch in batches:
-                # ----------------------- 更新actor ----------------------- #
-                # 计算概率比
-                old_batch_logprobs = old_probs[batch]
+                # ----------------------- Update actor ----------------------- #
+                old_batch_logprob = old_prob[batch]
                 
-                batch_states = states[batch]
-                batch_actions = actions[batch]
-                batch_logprobs, batch_entropy = self.actor.get_prob(batch_states, batch_actions)
+                batch_state = state[batch]
+                batch_action = action[batch]
+                batch_logprob, batch_entropy = self.actor.get_prob(batch_state, batch_action)
 
-                ratio = torch.exp(batch_logprobs - old_batch_logprobs.detach())
+                ratio = torch.exp(batch_logprob - old_batch_logprob.detach())
 
-                # actor损失函数: loss_clip
-                rA = ratio * advantages[batch]
-                rA_clip = torch.clamp(ratio, 1-self.EPS_CLIP, 1+self.EPS_CLIP) * advantages[batch]
-                actor_loss = -torch.min(rA, rA_clip).mean()
+                # loss_clip
+                surr1 = ratio * advantage[batch]
+                surr2 = torch.clamp(ratio, 1-self.EPS_CLIP, 1+self.EPS_CLIP) * advantage[batch]
+                # actor_loss = -torch.min(surr1, surr2).mean() - 0.01*batch_entropy  # Trick 5: policy entropy
+                actor_loss = -torch.min(surr1, surr2).mean()
 
-                # ----------------------- 更新critic ----------------------- #
-                # critic损失函数: loss_vf
-                batch_values = self.critic(batch_states)
-                batch_values = torch.squeeze(batch_values)
-                old_batch_returns = old_returns[batch]
-                # critic_loss = ((batch_returns-batch_values)**2).mean()
-                critic_loss = nn.functional.mse_loss(batch_values, old_batch_returns)  # NOTE: 该函数默认执行mean()操作
-
-                # 总梯度
-                total_loss = actor_loss + 0.5*critic_loss
-                # total_loss = actor_loss + 0.5*critic_loss - 0.01*batch_entropy.mean()  # 考虑dist_entropy
-
-                # 梯度更新
                 self.actor_optimizer.zero_grad()
-                self.critic_optimizer.zero_grad()
-                total_loss.backward()
+                actor_loss.backward()
+                torch.nn.utils.clip_grad_norm_(self.actor.parameters(), 0.5)  # Trick 7: Gradient clip
                 self.actor_optimizer.step()
+
+                # ----------------------- Update critic ----------------------- #
+                # loss_vf
+                batch_value = torch.squeeze(self.critic(batch_state))
+                batch_value_target = value_target[batch]
+                critic_loss = nn.functional.mse_loss(batch_value, batch_value_target)  # NOTE: 该函数已默认执行mean()操作
+                
+                self.critic_optimizer.zero_grad()
+                critic_loss.backward()
+                torch.nn.utils.clip_grad_norm_(self.critic.parameters(), 0.5)  # Trick 7: Gradient clip
                 self.critic_optimizer.step()
         
-        # 清空缓冲区
+        # Clear buffer
         self.replay_buffer.clear_memory()
 
         return actor_loss.item(),torch.mean(batch_entropy).item(), critic_loss.item()     
