@@ -4,8 +4,10 @@ from datetime import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 
+from scipy.signal import savgol_filter
+
 ################################# 辅助函数 #################################
-# 日志记录函数
+# ------------------- 日志记录函数 ------------------- #
 def log_message(log_path, message, timestamp=False):
     with open(log_path, "a") as f:
         if timestamp:
@@ -14,7 +16,37 @@ def log_message(log_path, message, timestamp=False):
         else:
             f.write(message + "\n")
 
-# 作图函数
+
+# ------------------- 曲线平滑函数 ------------------- #
+def savitzky_golay_filter(data, window_ratio, polyorder):
+    """
+        Description: 使用Savitzky-Golay filter平滑噪声
+        Args: 
+            - window_ratio: 窗口长度因子 (0.04 ~ 0.1)
+            - polyorder: 多项式阶数 (2 or 3)
+        NOTE: window_length 必须是奇数
+    """
+    window_length = int(len(data) * window_ratio)
+    if window_length % 2 == 0:  # 确保是奇数
+        window_length += 1
+    smoothed_data = savgol_filter(data, window_length, polyorder)
+
+    return smoothed_data
+
+def exponential_moving_average(data, alpha):
+    """
+        Description: Exponential Weighted Moving Average
+        Args: 
+            - alpha: 决定了EMA对数据变化的响应速度和平滑程度
+    """
+    ema = np.zeros_like(data)
+    ema[0] = data[0]
+    for i in range(1, len(data)):
+        ema[i] = alpha * data[i] + (1 - alpha) * ema[i-1]
+    return ema
+
+
+# ------------------- 作图函数 ------------------- #
 def plot_metrics(plot_dir, run_num, metrics_dict, episode):
     """
     Description: 

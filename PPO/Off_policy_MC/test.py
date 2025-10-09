@@ -21,10 +21,10 @@ def test():
     # max_ep_len = 200
     # action_std = None
 
-    # env_name = "LunarLander-v2"
-    # has_continuous_action_space = False
-    # max_ep_len = 300
-    # action_std = None
+    env_name = "LunarLander-v2"
+    has_continuous_action_space = False
+    max_ep_len = 300
+    action_std = None
 
     # env_name = "BipedalWalker-v2"
     # has_continuous_action_space = True
@@ -36,15 +36,15 @@ def test():
     # max_ep_len = 1000           # max timesteps in one episode
     # action_std = 0.1            # set same std for action distribution which was used while saving
 
-    env_name = "Pendulum-v1"
-    has_continuous_action_space = True
-    max_ep_len = 600            # max timesteps in one episode
-    action_std = 0.1            # set same std for action distribution which was used while saving
+    # env_name = "Pendulum-v1"
+    # has_continuous_action_space = True
+    # max_ep_len = 600            # max timesteps in one episode
+    # action_std = 0.1            # set same std for action distribution which was used while saving
 
     render = True               # render environment on screen
     frame_delay = 0.01             # if required; add delay b/w frames
 
-    total_test_episodes = 5     # total num of testing episodes
+    total_test_episodes = 10     # total num of testing episodes
 
     K_epochs = 80               # update policy for K epochs
     eps_clip = 0.2              # clip parameter for PPO

@@ -1,19 +1,7 @@
 # PPO-PyTorch
 
-### UPDATE [April 2021] : 
-
-- merged discrete and continuous algorithms
-- added linear decaying for the continuous action space `action_std`; to make training more stable for complex environments
-- added different learning rates for actor and critic
-- episodes, timesteps and rewards are now logged in `.csv` files
-- utils to plot graphs from log files
-- utils to test and make gifs from preTrained networks
-- `PPO_colab.ipynb` combining all the files to train / test / plot graphs / make gifs on google colab in a convenient jupyter-notebook
-
-#### [Open `PPO_colab.ipynb` in Google Colab](https://colab.research.google.com/github/nikhilbarhate99/PPO-PyTorch/blob/master/PPO_colab.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nikhilbarhate99/PPO-PyTorch/blob/master/PPO_colab.ipynb)
-
-
 ## Introduction
+**Its from nikhilbarhate99.** [Github from nikhilbarhate99](https://github.com/nikhilbarhate99/PPO-PyTorch) 
 
 This repository provides a Minimal PyTorch implementation of Proximal Policy Optimization (PPO) with clipped objective for OpenAI gym environments. It is primarily intended for beginners in [Reinforcement Learning](https://en.wikipedia.org/wiki/Reinforcement_learning) for understanding the PPO algorithm. It can still be used for complex environments but may require some hyperparameter-tuning or changes in the code. A concise explaination of PPO algorithm can be found [here](https://stackoverflow.com/questions/46422845/what-is-the-way-to-understand-proximal-policy-optimization-algorithm-in-rl) and a thorough explaination of all the details for implementing best performing PPO can be found [here](https://iclr-blog-track.github.io/2022/03/25/ppo-implementation-details/) (All are not implemented in this repo yet). 
 

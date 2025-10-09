@@ -11,11 +11,14 @@ from utils import log_message
 
 ####### initialize environment hyperparameters #######
 
-# is_continuous = False
 # env_name = "CartPole-v1"  # NUM_EPISODE = 200
+# is_continuous = False
 
-is_continuous = True
+# env_name = "LunarLander-v2"
+# is_continuous = False
+
 env_name = "Pendulum-v1"  # NUM_EPISODE = 600
+is_continuous = True
 
 env = gym.make(env_name)
 
@@ -26,13 +29,13 @@ else:
 state_dim = env.observation_space.shape[0]
 
 ################ PPO hyperparameters ################
-NUM_EPISODE = 600
+NUM_EPISODE = 1000
 EPI_LEN = 600
 MAX_TIMESTEPS = NUM_EPISODE*EPI_LEN
-UPDATE_INTERVAL = 1
 
 K_EPOCHS = 60
-BATCH_SIZE = EPI_LEN
+BATCH_SIZE = 600
+UPDATE_INTERVAL = BATCH_SIZE * 1
 
 GAMMA = 0.99
 LAMBDA = 0.95
@@ -44,7 +47,7 @@ LR_CRITIC = 1e-3
 ############### print, log, save, plot ###############
 parent_fold = './Off_policy_GAE'
 ### print ###
-print_freq = 4
+print_freq = BATCH_SIZE * 4
 
 ### logg ###
 log_dir = parent_fold + '/log'
@@ -125,39 +128,39 @@ for ep_i in range(NUM_EPISODE):
         ep_return += reward
         
         timestep += 1
+
+        # 更新策略, 记录日志
+        if timestep % UPDATE_INTERVAL == 0:
+            last_state = next_state
+            actor_loss, actor_entropy, critic_loss = agent.update_policy(last_state)
+            update_iter += 1 
+
+            return_history.append(ep_return)
+            actor_loss_history.append(actor_loss)
+            actor_entropy_history.append(actor_entropy)
+            critic_loss_history.append(critic_loss)
+
+            avg_return = np.mean(return_history[-100:])
+            avg_actor_loss = np.mean(actor_loss_history[-100:])
+            avg_actor_entropy = np.mean(actor_entropy_history[-100:])
+            avg_critic_loss = np.mean(critic_loss_history[-100:])
+
+            log_message(log_path, f"{ep_i+1}: "  # episode
+                                f"{timestep}, "   
+                                f"{update_iter}, " 
+                                f"{ep_return:.3f}, "
+                                f"{avg_return:.3f}, "  # Average Episode Return
+                                f"{avg_actor_loss:.3f}, "  # Average Policy loss
+                                f"{avg_actor_entropy:.3f}, "  # Average Entropy
+                                f"{avg_critic_loss:.3f}")  # Average Value loss
+            
+        # 打印训练信息
+        if timestep % print_freq == 0:
+            print(f"Ep {ep_i+1}, Avg_return {avg_return: .1f}, Actor_loss {avg_actor_loss: .1f}, Entropy {avg_actor_entropy: .1f}, Critic_loss {avg_critic_loss: .1f}")
         
         # Episode结束
         if done == True:
             break
-
-    # 更新策略, 记录日志
-    if (ep_i+1) % UPDATE_INTERVAL == 0:
-        last_state = next_state
-        actor_loss, actor_entropy, critic_loss = agent.update_policy(last_state)
-        update_iter += 1 
-
-        return_history.append(ep_return)
-        actor_loss_history.append(actor_loss)
-        actor_entropy_history.append(actor_entropy)
-        critic_loss_history.append(critic_loss)
-
-        avg_return = np.mean(return_history[-100:])
-        avg_actor_loss = np.mean(actor_loss_history[-100:])
-        avg_actor_entropy = np.mean(actor_entropy_history[-100:])
-        avg_critic_loss = np.mean(critic_loss_history[-100:])
-
-        log_message(log_path, f"{ep_i+1}: "  # episode
-                            f"{timestep}, "   
-                            f"{update_iter}, " 
-                            f"{ep_return:.3f}, "
-                            f"{avg_return:.3f}, "  # Average Episode Return
-                            f"{avg_actor_loss:.3f}, "  # Average Policy loss
-                            f"{avg_actor_entropy:.3f}, "  # Average Entropy
-                            f"{avg_critic_loss:.3f}")  # Average Value loss
-
-    # 打印训练信息
-    if (ep_i+1) % print_freq == 0:
-        print(f"Ep {ep_i+1}, Avg_return {avg_return: .1f}, Actor_loss {avg_actor_loss: .1f}, Entropy {avg_actor_entropy: .1f}, Critic_loss {avg_critic_loss: .1f}")
     
     # 保存模型
     if ep_i >= 100 and avg_return > best_return:

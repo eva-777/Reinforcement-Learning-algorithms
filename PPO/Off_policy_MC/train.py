@@ -15,13 +15,21 @@ def train():
     print("============================================================================================")
 
     ####### initialize environment hyperparameters ######
-    env_name = "Pendulum-v1"
+    
+    # is_continuous = False
+    # env_name = "CartPole-v1"  # NUM_EPISODE = 200
+    
+    # is_continuous = False
+    # env_name = "LunarLander-v2"
 
-    is_continuous = True  # continuous action space; else discrete
+    # env_name = "Pendulum-v1"
+    # is_continuous = True  # continuous action space; else discrete
 
-    max_ep = 600
+    is_continuous = True
+    env_name = "BipedalWalker-v3" 
+    
     max_ep_len = 600                    # max timesteps in one episode
-    max_timesteps = max_ep*max_ep_len   # break training loop if timeteps > max_training_timesteps
+    max_timesteps = int(100e4)          # break training loop if timeteps > max_training_timesteps
 
     print_freq = max_ep_len * 10        # print avg reward in the interval (in num timesteps)
     log_freq = max_ep_len * 2           # log avg reward in the interval (in num timesteps)
