@@ -1,3 +1,7 @@
+The `light_mappo-main` is acquired from https://github.com/tinyzqh/light_mappo. Some mistakes within code are modified, seen in `code_modification.md`.
+
+
+
 <div align="center">
 
 # `light_mappo`
