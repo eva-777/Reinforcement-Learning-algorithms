@@ -1,17 +1,18 @@
 # Reinforcement-Learning-algorithms
 
 ## Introduction
-Implementation of classical RL or MARL algorithms by Pytorch  
+Implementation of classical RL and MARL algorithms by Pytorch  
 RL algorithm list:
 ```
 PPO
-SAC (todo)
+SAC (to be uploaded)
+DQN (to be uploaded)
 
 ```
 
 MARL algorithm list:
 ```
-MAPPO (todo)
+MAPPO
 MASAC (todo)
 
 ```

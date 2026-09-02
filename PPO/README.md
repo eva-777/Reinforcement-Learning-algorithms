@@ -1,20 +1,18 @@
 # PPO-PyTorch
 
 ## Introduction
-- This code provides a single threaded PyTorch implementation of Proximal Policy Optimization [PPO](https://arxiv.org/abs/1707.06347) for OpenAI gym environments.
-- The algorithm can be implemented based on **On-policy** or **Off-policy** version.  
+- This code provides a single threaded PyTorch implementation of [PPO](https://arxiv.org/abs/1707.06347) (Proximal Policy Optimization) for OpenAI gym environments. The algorithm can be implemented for **discrete** or **continuous** action space.  
 
 
 ## Tricks
 Here are some training tricks for stable and well-performing PPO implementation:
-- 1. Random seed for torch, cudnn, numpy                             (√)
-- 2. Orthogonal initialization                                       (√)
-- 3. Reward scaling                                                  (todo)
-- 4. Advantages normalization                                        (√)
-- 5. Gradient clip                                                   (√)
-- 6. Value function clip                                             (√)
-- 7. Learning rate decay                                             (√)
-- 8. Stochastic for exploration, deterministic for test (optional)   (todo)
+- 1. Random seed for torch, cudnn, numpy, env_train                 (√)
+- 2. Orthogonal initialization                                      (√)
+- 3. Advantages normalization                                       (√)
+- 4. Gradient clip                                                  (√)
+- 5. Value function clip                                            (√)
+- 6. Learning rate decay                                            (√)
+- 7. Stochastic for train, deterministic for eval                   (√)
 
 
 #### Note
@@ -31,21 +29,22 @@ Here are some training tricks for stable and well-performing PPO implementation:
 
 ```
 python == 3.11.13  
-pyTorch == 2.3.1+cu121  
-torchvision == 0.18.1+cu121  
-gym == 0.26.2  
+pyTorch == 2.3.1+cu121
+torchvision == 0.18.1+cu121
+gymnasium == 0.29.1   
 pygame == 2.6.1  
+box2d == 2.3.10  
 ```
 
 ```
-numPy == 1.26.0  
+numPy == 1.26.4  
 matplotlib == 3.10.3 
 ```
 
 
 ## References
 Here are some well-performing PPO implementation that can be referred:
+- [Github from XinJingHao](https://github.com/XinJingHao/DRL-Pytorch)
+- [Github from Lizhi-sjtu](https://github.com/Lizhi-sjtu/DRL-code-pytorch/tree/main/5.PPO-continuous)
 - [Github from nikhilbarhate99](https://github.com/nikhilbarhate99/PPO-PyTorch) 
 - [Github from vwxyzjn](https://github.com/vwxyzjn/ppo-implementation-details)
-- [Github from XinJingHao](https://github.com/XinJingHao/PPO-Continuous-Pytorch/tree/main)
-- [Github from Lizhi-sjtu](https://github.com/Lizhi-sjtu/DRL-code-pytorch/tree/main/5.PPO-continuous)
