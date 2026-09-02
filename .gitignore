@@ -1,0 +1,37 @@
+# ==================== General ====================
+
+/SAC/
+/DQN/
+
+# IDE
+.vscode/
+__pycache__/
+
+# ==================== MAPPO ====================
+# External repositories
+/MAPPO/*.zip
+/MAPPO/on-policy-main/
+
+# light_mappo
+/MAPPO/light_mappo-main/assets
+/MAPPO/light_mappo-main/results
+/MAPPO/light_mappo-main/test.py
+/MAPPO/light_mappo-main/test.ipynb
+
+# mappo_simple
+/MAPPO/mappo_simple/agents_test.py
+/MAPPO/mappo_simple/train_test.py
+/MAPPO/mappo_simple/*.ipynb
+
+# ==================== PPO ====================
+# External repositories
+/PPO/github_*/
+
+# Temporary / test files
+/PPO/PPO.pptx
+/PPO/test_tensorboard.py
+
+# PPO 
+/PPO/PPO_*/run_test.ipynb
+/PPO/PPO_*/ppo_gpu.py
+/PPO/PPO_*/train_gpu.py

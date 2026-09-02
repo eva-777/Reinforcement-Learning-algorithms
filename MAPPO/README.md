@@ -1,10 +1,11 @@
 # MAPPO-PyTorch
 
 ## Introduction
-- This code provides a simple PyTorch implementation of Multi-agent Proximal Policy Optimization (MAPPO).
+- This code contains a simple version and a light version of Multi-agent Proximal Policy Optimization (MAPPO), implemented by PyTorch.
 - Enviroment for MARL
     - ma_gym, from [Github](https://github.com/koulanurag/ma-gym)
     - PettingZoo, from [Github](https://github.com/Farama-Foundation/PettingZoo), [Farama](https://pettingzoo.farama.org)
+    - Customized env.
 
 
 ## Usage

@@ -1,4 +1,4 @@
-项目 `light_mappo-main` 获取自 https://github.com/tinyzqh/light_mappo，并对其中一些错误做出修改，见`code_modification.md`。
+项目 `light_mappo-main` 获取自 https://github.com/tinyzqh/light_mappo ，并对其中一些错误做出修改，见`code_modification.md`。
 
 
 
