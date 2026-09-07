@@ -1,0 +1,34 @@
+[2025-11-23 17:03]
+env=CartPole-v1, is_continuous:False 
+state_dim:4, action_dim:2 
+max_steps:150000, max_episode_steps:500 
+k_epoch:10, batch_size:2048, mini_batch:64, 
+gamma:0.99, lamda:0.95, eps_clip:0.2 
+lr_actor:0.0002, lr_critic: 0.0004 
+orthogonal:True, entropy_loss:True, adv_norm:False 
+grad_clip:True, value_clip:False, lr_decay:False 
+seed for env_train: 7 
+
+Episode, Timestep, Update, Avg_reward
+185: 8192, 4, 413.600 
+215: 16384, 8, 480.400 
+235: 24576, 12, 500.000 
+251: 32768, 16, 500.000 
+267: 40960, 20, 500.000 
+284: 49152, 24, 500.000 
+300: 57344, 28, 500.000 
+317: 65536, 32, 500.000 
+333: 73728, 36, 500.000 
+349: 81920, 40, 500.000 
+366: 90112, 44, 500.000 
+393: 98304, 48, 500.000 
+411: 106496, 52, 500.000 
+428: 114688, 56, 500.000 
+444: 122880, 60, 500.000 
+460: 131072, 64, 500.000 
+477: 139264, 68, 500.000 
+494: 147456, 72, 500.000 
+
+Best Avg_reward = 500.000
+
+Training time = 0:06:15
